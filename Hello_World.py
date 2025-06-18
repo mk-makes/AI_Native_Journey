@@ -5,4 +5,7 @@ print("Welcome to this interactive program!")
 user_name = input("Please enter your name: ")
 
 # Finally, use the entered name to give a personalized greeting
-print(f"Hello, {user_name}! It's great to meet you.")
+if user_name.strip().lower() == "MK":
+    print(f"Hey, it's the awesome AI Director, {user_name}!")
+else:
+    print(f"Hello, {user_name}! It's great to meet you.")
