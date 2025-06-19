@@ -100,6 +100,10 @@ function App() {
   const [gameOver, setGameOver] = useState(false);
   // State to prevent rapid clicking while cards are being compared/flipped back
   const [canClick, setCanClick] = useState(true);
+  // State for the timer: 3 minutes = 180 seconds
+  const [timeLeft, setTimeLeft] = useState(180);
+  // State to track if the game has started (first click) to begin the timer
+  const [gameStarted, setGameStarted] = useState(false);
 
   // Function to reset the game state. This will be called by the "Play Again" button.
   const resetGame = useCallback(() => {
@@ -123,8 +127,27 @@ function App() {
     setMatchedCards([]);
     setMoves(0);
     setGameOver(false);
+    setTimeLeft(180); // Reset timer
+    setGameStarted(false); // Reset game started flag
     setCanClick(true);
   }, [initialConcepts, shuffleArray]); // Dependencies for resetGame are stable
+
+  // Effect to manage the game timer
+  useEffect(() => {
+    let timer;
+    // Start timer only if game has started and is not over and time is left
+    if (gameStarted && !gameOver && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft(prevTime => prevTime - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && gameStarted && !gameOver) {
+      // If time runs out and game is not yet won
+      setGameOver(true); // Indicate game over due to time
+    }
+
+    // Cleanup function to clear the interval when the component unmounts or dependencies change
+    return () => clearInterval(timer);
+  }, [gameStarted, gameOver, timeLeft]); // Dependencies: timer depends on gameStarted, gameOver, and timeLeft
 
   // Effect to check for matches when two cards are flipped
   useEffect(() => {
@@ -150,31 +173,45 @@ function App() {
         }, 1000);
         return () => clearTimeout(timer); // Cleanup function: clear timeout if component unmounts or effect re-runs
       }
-      setMoves(prevMoves => prevMoves + 1); // Increment moves after checking
     }
   }, [flippedCards]); // Only depends on flippedCards; state updates are now safely deferred
 
-  // Effect to check if the game is over
+  // Effect to check if the game is over (all cards matched)
   useEffect(() => {
-    // Game is over if all card IDs in matchedCards equal the total number of cards
     if (matchedCards.length > 0 && matchedCards.length === cards.length && cards.length > 0) {
       setGameOver(true);
+      setGameStarted(false); // Stop the timer when game is won
     }
   }, [matchedCards, cards.length]); // Depends on matchedCards and the total number of cards
 
   // Handler for when a card is clicked
   const handleCardClick = (clickedCard) => {
+    // Start the game timer on the first valid click
+    if (!gameStarted && !gameOver) {
+      setGameStarted(true);
+    }
+
     // Ignore clicks if not clickable (e.g., during comparison delay),
     // or if the card is already matched, or if it's already one of the two currently flipped cards.
     if (!canClick || matchedCards.includes(clickedCard.id) || flippedCards.some(fc => fc.id === clickedCard.id)) {
       return;
     }
 
+    // Increment moves for every valid click
+    setMoves(prevMoves => prevMoves + 1);
+
     // Only allow flipping up to two cards at a time
     if (flippedCards.length < 2) {
       // Add the newly flipped card to the flippedCards state
       setFlippedCards(prev => [...prev, clickedCard]);
     }
+  };
+
+  // Format time for display
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -187,17 +224,22 @@ function App() {
         Match Python variable concepts with their examples!
       </p>
 
-      {/* Game Stats */}
-      <div className="flex justify-between items-center w-full max-w-md mx-auto mb-6 text-lg font-semibold bg-white bg-opacity-20 rounded-lg p-4 shadow-xl">
-        <span className="flex items-center">
+      {/* Game Stats and Timer */}
+      <div className="flex flex-col sm:flex-row justify-between items-center w-full max-w-md mx-auto mb-6 text-lg font-semibold bg-white bg-opacity-20 rounded-lg p-4 shadow-xl">
+        <span className="flex items-center mb-2 sm:mb-0">
           {/* SVG icon for moves */}
           <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
           Moves: {moves}
         </span>
-        <span className="flex items-center">
+        <span className="flex items-center mb-2 sm:mb-0">
           {/* SVG icon for matched pairs */}
           <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           Matched: {matchedCards.length / 2} / {initialConcepts.length}
+        </span>
+        <span className={`flex items-center ${timeLeft <= 10 && !gameOver ? 'text-red-400 animate-pulse' : ''}`}>
+          {/* SVG icon for timer */}
+          <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Time: {formatTime(timeLeft)}
         </span>
       </div>
 
@@ -214,12 +256,21 @@ function App() {
         ))}
       </div>
 
-      {/* Game Over Message */}
+      {/* Game Over Message (Win or Time Out) */}
       {gameOver && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 animate-fade-in">
           <div className="bg-white text-gray-900 rounded-xl p-8 shadow-2xl text-center max-w-sm w-full transform scale-105 animate-bounce-in">
-            <h2 className="text-3xl font-bold mb-4">You did it! 🎉</h2>
-            <p className="text-xl mb-6">All variables matched in {moves} moves!</p>
+            {timeLeft > 0 ? (
+              <>
+                <h2 className="text-3xl font-bold mb-4">You did it! 🎉</h2>
+                <p className="text-xl mb-6">All variables matched in {moves} moves!</p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-3xl font-bold mb-4 text-red-600">Time's Up! ⏰</h2>
+                <p className="text-xl mb-6">You ran out of time. Try again!</p>
+              </>
+            )}
             <button
               onClick={resetGame}
               className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"

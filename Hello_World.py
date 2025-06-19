@@ -8,7 +8,7 @@ print("Welcome to this interactive program!")
 # Next, ask the user for their name and store their input in a variable
 user_name = input("Please enter your name: ")
 
-# --- Name-based Greeting (including Maysa's special greeting) ---
+# --- Name-based Greeting (including MK's special greeting) ---
 if user_name.strip().lower() == "MK":
     print(f"Hey, it's the awesome AI Director, {user_name}!")
 else:
