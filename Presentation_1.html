@@ -1,0 +1,189 @@
+<!-- Chosen Palette: Calm Harmony -->
+<!-- Application Structure Plan: The application will be a single-page scrolling website divided into distinct, top-level sections: "Introduction", "The 'Hello, World!' Script", "The Python Variable Matching Game", "Technology Behind the Game", and "Conclusion". A sticky navigation bar at the top will allow users to smoothly scroll to any section, providing easy and non-linear exploration of the presentation content. This structure prioritizes clear thematic separation and quick access to information, enhancing user understanding and navigation without replicating a linear slide presentation. -->
+<!-- Visualization & Content Choices:
+* Introduction: Presented as introductory text with the title and presenter details. Goal: Set the stage. Method: Text.
+* "Hello, World!" Script: Presented as a dedicated section with explanatory text and a pre-formatted Python code snippet. Goal: Inform about basic coding. Method: Text and code block. Interaction: Reading.
+* The Python Variable Matching Game: The core of the interactive experience. This section will contain an embedded iframe loading the live game. Goal: Allow direct interaction with and demonstration of the application. Method: Embedded `iframe`. Interaction: Direct play of the game.
+* Technology Behind the Game: Presented as an organized list of key technologies (React, Tailwind CSS, GitHub Pages) with brief descriptions. Goal: Inform about the tools used. Method: Textual lists within styled containers. Interaction: Reading.
+* Conclusion & Future Outlook: Summarizing text and bullet points. Goal: Recap and provide future direction. Method: Textual lists. Interaction: Reading.
+* Omission of Chart.js/Plotly.js: The provided "Source Report" is a presentation script, primarily containing textual explanations and concepts (code snippets, game features, technology stack). It does not contain any quantitative data, metrics, trends, or comparisons that would naturally lend themselves to data visualization using Chart.js or Plotly.js without generating arbitrary, non-report-driven data. Therefore, to adhere to the prompt's primary goal of effectively translating the *provided Source Report* into an intuitive and understandable interactive experience, and avoiding elements that do not serve the content, Chart.js and Plotly.js are omitted to prevent superficial or misleading visualizations. The focus remains on presenting the provided information effectively. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>From Script to Web</title>
+    <link href="[https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap)" rel="stylesheet">
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .section-scroll-margin {
+            scroll-margin-top: 5rem; /* Adjust this value based on your fixed header height */
+        }
+        .live-game-iframe {
+            width: 100%;
+            height: 80vh; /* Responsive height */
+            min-height: 400px;
+            border: none;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Custom styles for the calm harmony palette */
+        .bg-primary-light { background-color: #F8F4F1; } /* Warm neutral background */
+        .text-primary-dark { color: #333333; }
+        .bg-secondary-light { background-color: #E0E7E9; } /* Soft blue-gray for sections */
+        .text-accent { color: #5C677D; } /* Muted blue for accents */
+        .bg-accent-button { background-color: #7D8E9E; } /* Darker muted blue for buttons */
+        .bg-accent-button:hover { background-color: #6C7A89; }
+        .border-line { border-color: #D3DBDE; } /* Subtle border */
+    </style>
+</head>
+<body class="bg-primary-light text-primary-dark">
+    <header class="bg-white shadow-md fixed top-0 left-0 w-full z-50">
+        <nav class="container mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center">
+            <h1 class="text-2xl font-bold text-accent mb-2 sm:mb-0">Script to Web</h1>
+            <ul class="flex space-x-4 text-lg font-medium">
+                <li><a href="#introduction" class="text-primary-dark hover:text-accent transition-colors">Intro</a></li>
+                <li><a href="#hello-world" class="text-primary-dark hover:text-accent transition-colors">Hello World</a></li>
+                <li><a href="#game" class="text-primary-dark hover:text-accent transition-colors">Game</a></li>
+                <li><a href="#technology" class="text-primary-dark hover:text-accent transition-colors">Tech</a></li>
+                <li><a href="#conclusion" class="text-primary-dark hover:text-accent transition-colors">Conclusion</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 mt-20">
+        <section id="introduction" class="mb-16 p-8 bg-secondary-light rounded-xl shadow-lg section-scroll-margin">
+            <h2 class="text-4xl font-extrabold mb-4 text-accent text-center">From Script to Web: Building and Deploying Interactive Applications</h2>
+            <p class="text-xl mb-6 text-center max-w-3xl mx-auto">
+                Welcome to a journey showcasing how foundational programming concepts can evolve into engaging, interactive web applications. We'll start with the very basics and end with a live game.
+            </p>
+            <div class="text-center text-lg font-semibold text-primary-dark">
+                <p>A Journey Through Python Basics and React Web Development</p>
+                <p class="mt-2">Presenter: [Your Name/Team Name]</p>
+                <p>Date: June 21, 2025</p>
+            </div>
+        </section>
+
+        <section id="hello-world" class="mb-16 p-8 bg-white rounded-xl shadow-lg section-scroll-margin border border-line">
+            <h2 class="text-3xl font-bold mb-4 text-accent text-center">The "Hello, World!" Script</h2>
+            <p class="text-lg mb-6 max-w-3xl mx-auto">
+                Every developer's journey often begins with 'Hello, World!' This section revisits that fundamental first step in programming, demonstrating how a simple instruction can make a computer respond. It’s the essential building block that proves we can command a machine, laying the groundwork for more complex logic.
+            </p>
+            <div class="bg-gray-800 text-white p-6 rounded-lg shadow-inner max-w-lg mx-auto text-center overflow-x-auto">
+                <pre class="whitespace-pre-wrap"><code class="language-python text-left">print("Hello, World!")</code></pre>
+            </div>
+            <ul class="list-disc list-inside mt-6 text-lg max-w-3xl mx-auto">
+                <li>**Goal:** Our first step into the world of programming.</li>
+                <li>**What it is:** A simple program to display a message.</li>
+                <li>**Key Learning Points:**
+                    <ul>
+                        <li>Introduction to basic syntax and functions (`print()`).</li>
+                        <li>Understanding how to make a computer execute a command.</li>
+                        <li>Running code in a terminal or command-line environment.</li>
+                        <li>This simple script forms the very foundation for all future programming.</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <section id="game" class="mb-16 p-8 bg-secondary-light rounded-xl shadow-lg section-scroll-margin">
+            <h2 class="text-3xl font-bold mb-4 text-accent text-center">Introducing the Python Variable Matching Game</h2>
+            <p class="text-lg mb-6 max-w-3xl mx-auto">
+                Moving beyond basic scripts, this section introduces an interactive memory game that applies programming skills in a fun, educational, and engaging way. Experience the game live and see how basic concepts are transformed into a dynamic web application.
+            </p>
+            <div class="flex justify-center items-center w-full">
+                <iframe
+                    src="[https://mk-makes.github.io/AI_Native_Journey/](https://mk-makes.github.io/AI_Native_Journey/)"
+                    title="Python Variable Matching Game"
+                    class="live-game-iframe"
+                ></iframe>
+            </div>
+            <ul class="list-disc list-inside mt-6 text-lg max-w-3xl mx-auto">
+                <li>**Concept:** An interactive memory game for learning Python variable types.</li>
+                <li>**Why we built it:** To apply programming skills in a fun, educational, and interactive way.</li>
+                <li>**Key Features:**
+                    <ul>
+                        <li>Match Python concepts (e.g., String, Integer) with their examples.</li>
+                        <li>Interactive user interface with card flipping.</li>
+                        <li>Includes a timer and move counter for challenge.</li>
+                        <li>Responsive design for various devices (mobile, tablet, desktop).</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <section id="technology" class="mb-16 p-8 bg-white rounded-xl shadow-lg section-scroll-margin border border-line">
+            <h2 class="text-3xl font-bold mb-4 text-accent text-center">The Technology Behind the Game</h2>
+            <p class="text-lg mb-6 max-w-3xl mx-auto">
+                Building a modern web application requires a robust set of tools. This section details the key technologies that powered the development and deployment of the Python Variable Matching Game, highlighting their roles in creating an efficient and user-friendly experience.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                <div class="bg-secondary-light p-6 rounded-lg shadow-md text-center">
+                    <span class="text-5xl mb-3 block" role="img" aria-label="React icon">⚛️</span>
+                    <h3 class="text-2xl font-semibold mb-2 text-accent">React</h3>
+                    <p class="text-base">
+                        A powerful JavaScript library for building user interfaces. It enables component-based architecture for reusable UI elements and manages dynamic interactions and game state efficiently.
+                    </p>
+                </div>
+                <div class="bg-secondary-light p-6 rounded-lg shadow-md text-center">
+                    <span class="text-5xl mb-3 block" role="img" aria-label="Tailwind CSS icon">🎨</span>
+                    <h3 class="text-2xl font-semibold mb-2 text-accent">Tailwind CSS</h3>
+                    <p class="text-base">
+                        A utility-first CSS framework for rapid, consistent, and responsive design. It allows building custom designs directly within the HTML-like JSX structure, ensuring a clean and modern look.
+                    </p>
+                </div>
+                <div class="bg-secondary-light p-6 rounded-lg shadow-md text-center">
+                    <span class="text-5xl mb-3 block" role="img" aria-label="GitHub icon">🐙</span>
+                    <h3 class="text-2xl font-semibold mb-2 text-accent">GitHub Pages</h3>
+                    <p class="text-base">
+                        A free web hosting service provided directly from a GitHub repository. It facilitates an automated deployment process, making it easy to publish web applications live online for public access.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="conclusion" class="p-8 bg-secondary-light rounded-xl shadow-lg section-scroll-margin">
+            <h2 class="text-3xl font-bold mb-4 text-accent text-center">Conclusion & Future Outlook</h2>
+            <p class="text-lg mb-6 max-w-3xl mx-auto">
+                Our journey from a basic Python script to a deployed web game highlights the transformative power of programming. This section summarizes the key takeaways and explores potential future enhancements, demonstrating the continuous evolution of software development.
+            </p>
+            <ul class="list-disc list-inside text-lg max-w-3xl mx-auto">
+                <li>**Recap:** From a single line of Python to a fully deployed web game.</li>
+                <li>**Key Takeaway:** Demonstrates the progression from foundational scripting to interactive application development.</li>
+                <li>**Future Enhancements:**
+                    <ul>
+                        <li>Adding more variable types and concepts.</li>
+                        <li>Implementing difficulty levels (e.g., more cards, shorter timer).</li>
+                        <li>Tracking high scores.</li>
+                    </ul>
+                </li>
+            </ul>
+            <div class="text-center mt-8">
+                <h3 class="text-2xl font-bold text-accent">Thank You & Questions!</h3>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - document.querySelector('header').offsetHeight,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+```
