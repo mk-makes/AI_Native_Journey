@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitCompass: Navigate to a Healthier You</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Ornate Serif Font for NSEW - Cinzel -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Brython for client-side Python -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.10.5/brython.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.10.5/brython_stdlib.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Nautical Theme Background - Placeholder for reliability */
+            background-image: url('https://placehold.co/1920x1080/4682B4/FFFFFF?text=Nautical+Seascape'); /* Steel Blue background, White text - reliable placeholder */
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed; /* Keep background fixed during scroll */
+            background-position: center center;
+            background-color: #f0f4f8; /* Fallback color */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-x: hidden; /* Prevent horizontal scroll on small screens */
+            color: #333; /* Default text color, adjust as needed for readability */
+        }
+        .compass-outer {
+            background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent white for better readability over background */
+            border-radius: 9999px; /* Make it circular */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.08);
+            border: 4px solid #ccd6e0; /* A light, sturdy border */
+            max-width: 800px; /* Max width for the circular container */
+            width: 100%;
+            aspect-ratio: 1 / 1; /* Keep it perfectly circular */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Align content to the top within the circle */
+            align-items: center;
+            padding: 20px;
+            overflow: hidden; /* Hide anything that goes beyond the circle */
+            position: relative; /* For absolute positioning of results */
+        }
+
+        @media (min-width: 768px) {
+            .compass-outer {
+                padding: 40px;
+            }
+        }
+
+        .compass-center {
+            text-align: center;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 10;
+        }
+        .compass-needle {
+            display: inline-block;
+            font-size: 2.5rem; /* Larger compass icon */
+            color: #d97706; /* Amber color for needle */
+            margin-bottom: 8px;
+            transform: rotate(-45deg); /* Slightly rotated for visual flair */
+        }
+        .compass-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1.1;
+        }
+        .compass-tagline {
+            font-size: 1.125rem;
+            color: #4a5568;
+            margin-top: 4px;
+        }
+
+        /* NSEW Directions */
+        .compass-directions {
+            position: absolute;
+            width: calc(100% - 40px); /* Adjust to stay inside padding */
+            height: calc(100% - 40px); /* Adjust to stay inside padding */
+            max-width: 760px; /* Max width after padding */
+            max-height: 760px; /* Max height after padding */
+            border-radius: 9999px;
+            pointer-events: none; /* Allows clicks on elements underneath */
+            font-size: 1.5rem;
+            top: 20px; /* Offset for padding */
+            left: 20px; /* Offset for padding */
+        }
+        @media (min-width: 768px) {
+            .compass-directions {
+                width: calc(100% - 80px);
+                height: calc(100% - 80px);
+                top: 40px;
+                left: 40px;
+            }
+        }
+
+        .compass-directions span {
+            position: absolute;
+            font-weight: 700; /* Bold for prominence */
+            color: #FFD700; /* Golden color */
+            font-family: 'Cinzel', serif; /* Ornate serif font */
+            text-shadow: 
+                0 0 5px rgba(255,255,0,0.5), /* Gold glow */
+                0 0 10px rgba(255,255,0,0.3); 
+        }
+        .compass-directions .north { top: 0; left: 50%; transform: translateX(-50%) translateY(-100%); }
+        .compass-directions .south { bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%); }
+        .compass-directions .east { right: 0; top: 50%; transform: translateX(100%) translateY(-50%); }
+        .compass-directions .west { left: 0; top: 50%; transform: translateX(-100%) translateY(-50%); }
+
+        .inputs-area {
+            width: 90%; /* Occupy most of the circle width */
+            padding-bottom: 20px; /* Space before results */
+            overflow-y: auto; /* Allow scrolling for inputs if needed */
+            max-height: 60%; /* Limit input area height within the circle */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center input groups */
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+            width: 100%; /* Make input groups fill parent */
+            max-width: 350px; /* Limit input width for readability */
+        }
+        .input-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+        .input-field {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #2d3748;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            background-color: #f8fafc; /* Slightly off-white for inputs */
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .unit-radio-group, .checkbox-group {
+            padding: 8px; /* Padding for checkbox/radio groups */
+            border-radius: 8px;
+            background-color: #fdfefe; /* Very light background for groups */
+            border: 1px solid #e2e8f0;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .unit-radio-group {
+            flex-direction: row; /* Keep radios in a row */
+            justify-content: center;
+        }
+        .unit-radio-label, .checkbox-label {
+            font-size: 0.9rem;
+            margin-bottom: 5px; /* Spacing between checkboxes */
+            padding: 4px 0;
+        }
+        .calculate-button {
+            width: 90%; /* Adjust button width to fit compass theme */
+            max-width: 350px;
+            padding: 14px 20px;
+            background-color: #6366f1;
+            color: #ffffff;
+            font-weight: 600;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 1.125rem;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            margin-top: 10px;
+            margin-bottom: 20px; /* Space before results if they pop out */
+        }
+        .calculate-button:hover {
+            background-color: #4f46e5;
+            transform: translateY(-2px);
+        }
+        .calculate-button:active {
+            background-color: #4338ca;
+            transform: translateY(0);
+        }
+        .result-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+             background-color: rgba(255, 255, 255, 0.95); /* Semi-transparent white overlay */
+            border-radius: 9999px; /* Match outer compass shape */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            box-sizing: border-box;
+            z-index: 20; /* Above other content */
+            transition: opacity 0.5s ease-in-out;
+            opacity: 0;
+            pointer-events: none; /* Allows clicks underneath when hidden */
+            overflow-y: auto; /* Allow scrolling for results */
+        }
+        .result-overlay.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .result-content {
+            background-color: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            padding: 24px;
+            border-radius: 12px;
+            color: #065f46;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            max-width: 90%;
+            width: 100%;
+            margin-top: auto; /* Push content to center/bottom if overlay is taller */
+            margin-bottom: auto;
+        }
+        .disclaimer-section {
+            margin-top: 20px;
+            font-size: 0.875rem;
+            color: #6b7280;
+            text-align: center;
+            padding: 16px;
+            background-color: #f8fafc;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            width: 100%; /* Ensure disclaimer spans full width */
+            box-sizing: border-box;
+        }
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 5px;
+            display: block;
+        }
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .close-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #e0e7ff; /* Light indigo */
+            color: #4338ca; /* Darker indigo */
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: background-color 0.2s, transform 0.1s;
+            z-index: 30; /* Ensure it's above the overlay content */
+        }
+        .close-button:hover {
+            background-color: #c7d2fe;
+            transform: scale(1.05);
+        }
+        .close-button:active {
+            background-color: #a5b4fc;
+            transform: translateY(0);
+        }
+        /* Style for loading message */
+        .loading-message {
+            text-align: center;
+            font-style: italic;
+            color: #6366f1; /* Indigo color */
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body onload="brython()">
+    <div class="compass-outer">
+        <div class="compass-center">
+            <div class="compass-needle">🧭</div>
+            <h1 class="compass-title">FitCompass</h1>
+            <p class="compass-tagline">Navigate to a Healthier You</p>
+        </div>
+
+        <div class="compass-directions">
+            <span class="north">N</span>
+            <span class="south">S</span>
+            <span class="east">E</span>
+            <span class="west">W</span>
+        </div>
+
+        <div class="inputs-area">
+            <!-- Input Section -->
+            <div class="input-group">
+                <label for="weight" class="input-label">Weight:</label>
+                <input type="number" id="weight" class="input-field" placeholder="e.g., 70">
+                <span id="weightError" class="error-message hidden"></span>
+            </div>
+
+            <div class="input-group">
+                <label for="height" class="input-label">Height:</label>
+                <input type="number" id="height" class="input-field" placeholder="e.g., 1.75">
+                <span id="heightError" class="error-message hidden"></span>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">Units:</label>
+                <div class="unit-radio-group">
+                    <label class="unit-radio-label">
+                        <input type="radio" name="units" value="metric" checked> Metric (kg/m)
+                    </label>
+                    <label class="unit-radio-label">
+                        <input type="radio" name="units" value="imperial"> Imperial (lbs/inches)
+                    </label>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="activityLevel" class="input-label">How active are you generally?</label>
+                <select id="activityLevel" class="input-field">
+                    <option value="sedentary">Sedentary (little to no exercise)</option>
+                    <option value="lightly_active">Lightly Active (light exercise/sports 1-3 days/week)</option>
+                    <option value="moderately_active">Moderately Active (moderate exercise/sports 3-5 days/week)</option>
+                    <option value="very_active">Very Active (hard exercise/sports 6-7 days/week)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">Additional Health Information:</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="pacemaker"> Pacemaker
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="diabetes"> Diabetes
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="respiratoryIssues"> Respiratory Health Issues (e.g., asthma, COPD)
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="jointProblems"> Significant Joint Problems (e.g., severe arthritis, recent surgery)
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="pregnant"> Pregnant
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="heartCondition"> Other Heart Condition
+                    </label>
+                    <!-- 'Other' checkbox removed -->
+                </div>
+            </div>
+            
+            <!-- 'otherConditionInputGroup' div removed -->
+
+            <button id="calculateBtn" class="calculate-button">Calculate BMI & Get Advice</button>
+        </div>
+
+        <!-- Result Overlay (hidden until calculated) -->
+        <div id="resultsOverlay" class="result-overlay hidden">
+            <button id="closeResultsBtn" class="close-button">✖</button>
+            <div id="resultsContent" class="result-content">
+                <h3>Your Results:</h3>
+                <p><strong>BMI:</strong> <span id="bmiValue"></span></p>
+                <p><strong>Category:</strong> <span id="bmiCategory"></span></p>
+
+                <h3>Suggested Workouts for Your Category:</h3>
+                <p id="workoutSuggestion"></p>
+                <div id="workoutVideos" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <!-- Videos will be inserted here by Python -->
+                </div>
+
+                <div id="healthConsiderations">
+                    <!-- Health-specific advice will be inserted here -->
+                </div>
+            </div>
+            <div class="disclaimer-section">
+                <p><strong>Disclaimer:</strong> This information is for general guidance only and not a substitute for professional medical advice. Always consult with a healthcare provider before starting any new exercise program, especially if you have pre-existing health conditions.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Python Script for Logic -->
+    <script type="text/python">
+        from browser import document, html, window, ajax
+
+        # Python functions for BMI calculation and advice generation
+        def calculate_bmi_py(weight, height, units):
+            if units == 'metric':
+                return weight / (height * height)
+            else:
+                return (weight * 703) / (height * height)
+
+        def get_bmi_category_py(bmi):
+            if bmi < 18.5:
+                return 'Underweight'
+            elif 18.5 <= bmi <= 24.9:
+                return 'Normal weight'
+            elif 25.0 <= bmi <= 29.9:
+                return 'Overweight'
+            elif 30.0 <= bmi <= 34.9:
+                return 'Obese Class I'
+            elif 35.0 <= bmi <= 39.9:
+                return 'Obese Class II'
+            else:
+                return 'Obese Class III (Morbidly Obese)'
+
+        def get_workout_suggestion_py(category, activity_level):
+            text_suggestion = ""
+            video_suggestions = []
+
+            # Using a publicly embeddable video for testing functionality
+            generic_workout_video_url = "https://www.youtube.com/embed/watch?v=dQw4w9WgXcQ" # Rick Astley - Never Gonna Give You Up (a common, public, embeddable video for testing purposes)
+
+            if category == 'Underweight':
+                if activity_level == 'sedentary' or activity_level == 'lightly_active':
+                    text_suggestion = "Focus on building foundational strength and increasing muscle mass. Aim for strength training 2-3 times per week, 30-45 minutes per session. Incorporate light walking or gentle cardio for 20-30 minutes, 2-3 times per week to improve overall health. Focus on proper form and adequate calorie intake. Consult a dietitian."
+                    video_suggestions = [{"title": "Beginner Full Body Strength", "url": generic_workout_video_url}]
+                else: # Moderately Active, Very Active
+                    text_suggestion = "Continue with strength training to build muscle mass, focusing on progressive overload. Aim for 3-4 strength sessions per week, 45-60 minutes each. You can maintain your current cardio level, but prioritize muscle gain. Ensure sufficient caloric intake to support muscle growth. Consult a dietitian."
+                    video_suggestions = [{"title": "Intermediate Strength Training", "url": generic_workout_video_url}]
+            elif category == 'Normal weight':
+                if activity_level == 'sedentary':
+                    text_suggestion = "Start by establishing a consistent routine. Aim for at least 150 minutes of moderate-intensity cardio (like brisk walking or cycling) per week, spread across 3-5 days (e.g., 30 minutes, 5 times/week). Add full-body strength training 2 times per week, 30-45 minutes per session, to build muscle and improve metabolism."
+                    video_suggestions = [{"title": "Beginner Cardio Workout", "url": generic_workout_video_url}, {"title": "Bodyweight Strength", "url": generic_workout_video_url}]
+                elif activity_level == 'lightly_active':
+                    text_suggestion = "Progress towards a balanced routine. Aim for 3-4 sessions of moderate-intensity cardio, 30-40 minutes each. Include 2-3 strength training sessions per week, 45-60 minutes focusing on major muscle groups. Consider trying new activities to maintain motivation."
+                    video_suggestions = [{"title": "Moderate Cardio & Strength", "url": generic_workout_video_url}]
+                elif activity_level == 'moderately_active':
+                    text_suggestion = "Maintain your healthy lifestyle with a mix of cardio and strength. Aim for 4-5 cardio sessions per week, 30-45 minutes each, incorporating varied intensities. Continue with 3 strength training sessions, 45-60 minutes. Consider advanced exercises or sports to challenge yourself."
+                    video_suggestions = [{"title": "Advanced Cardio & Strength", "url": generic_workout_video_url}]
+                else: # Very Active
+                    text_suggestion = "You have an excellent activity level! To optimize performance and prevent overtraining, aim for 3-5 sessions of high-intensity cardio (e.g., HIIT, vigorous sports) per week, 30-60 minutes each, combined with 3-4 strength training sessions, 45-75 minutes each, focusing on varied muscle groups. Also, incorporate regular flexibility and mobility work (e.g., stretching, yoga) for 15-30 minutes, 2-3 times per week. Ensure adequate recovery and consult a coach or trainer for peak performance strategies."
+                    video_suggestions = [{"title": "High-Intensity Training", "url": generic_workout_video_url}, {"title": "Flexibility & Mobility", "url": generic_workout_video_url}]
+            elif category == 'Overweight':
+                if activity_level == 'sedentary' or activity_level == 'lightly_active':
+                    text_suggestion = "Begin with low-impact activities to protect your joints. Aim for brisk walking or light cycling for 20-30 minutes, 3-4 times per week. Focus on increasing daily steps. Incorporate simple bodyweight exercises (like chair squats, wall push-ups) 2 times per week. Prioritize consistency over intensity initially."
+                    video_suggestions = [{"title": "Beginner Low Impact Cardio", "url": generic_workout_video_url}, {"title": "Chair Exercises", "url": generic_workout_video_url}]
+                else: # Moderately Active, Very Active
+                    text_suggestion = "Gradually increase intensity and duration of your current activities. Aim for 4-5 sessions of moderate cardio, 30-45 minutes each. Incorporate full-body strength training 2-3 times per week. Focus on fat loss while preserving muscle. Listen to your body and avoid overexertion."
+                    video_suggestions = [{"title": "Intermediate Cardio", "url": generic_workout_video_url}, {"title": "Full Body Strength", "url": generic_workout_video_url}]
+            elif category in ['Obese Class I', 'Obese Class II', 'Obese Class III (Morbidly Obese)']:
+                if activity_level == 'sedentary' or activity_level == 'lightly_active':
+                    text_suggestion = "It's important to start gently to prevent injury. Focus on very low-impact activities like walking, water aerobics, or seated exercises for 15-20 minutes, 3 times per week. Gradually increase duration before intensity. Every bit of movement helps. Consider supervised exercise programs and consult a professional for guidance."
+                    video_suggestions = [{"title": "Gentle Water Aerobics", "url": generic_workout_video_url}, {"title": "Seated Beginner Workout", "url": generic_workout_video_url}]
+                else: # Moderately Active, Very Active
+                    text_suggestion = "Continue with low-to-moderate impact exercises, focusing on consistent, sustained activity. Aim for 30-45 minutes of brisk walking, cycling, or swimming, 4-5 times per week. Add light resistance training 2-3 times per week. Focus on improving cardiovascular health and mobility. Consult a professional for a tailored plan."
+                    video_suggestions = [{"title": "Brisk Walking & Light Strength", "url": generic_workout_video_url}]
+            else:
+                text_suggestion = "No specific suggestions. Please consult a healthcare professional for personalized advice."
+                video_suggestions = []
+            
+            return (text_suggestion, video_suggestions)
+
+        def get_health_considerations_py(health_conditions): # Removed other_condition_text parameter
+            considerations = []
+            if 'pacemaker' in health_conditions:
+                considerations.append("High-intensity or high-impact exercises might require medical clearance. Consult your cardiologist before starting any new vigorous routines. Monitor heart rate closely as advised by your doctor.")
+            if 'diabetes' in health_conditions:
+                considerations.append("Consistent moderate-intensity exercise is highly beneficial for blood sugar control. Monitor blood sugar closely before, during and after activity. Discuss exercise plans and medication adjustments with your doctor or endocrinologist.")
+            if 'respiratoryIssues' in health_conditions:
+                considerations.append("Avoid exercises that significantly strain your breathing without medical supervision. Focus on controlled breathing techniques and build up endurance gradually. Always carry any prescribed inhalers or medications. Consult a pulmonologist for exercise guidelines.")
+            if 'jointProblems' in health_conditions:
+                considerations.append("Prioritize low-impact exercises that minimize stress on joints, suchs as swimming, cycling (especially recumbent bikes), elliptical trainers, or chair exercises. Avoid high-impact activities like running or jumping. Consider physical therapy to strengthen supporting muscles.")
+            if 'pregnant' in health_conditions:
+                considerations.append("Consult your obstetrician before starting or continuing any exercise program. Generally, moderate, low-impact exercise is safe for most pregnancies, but individual circumstances vary. Avoid exercises lying flat on your back after the first trimester.")
+            if 'heartCondition' in health_conditions:
+                considerations.append("Exercise should only be undertaken under strict medical guidance. A stress test and individualized exercise prescription from a cardiologist are highly recommended before starting any physical activity. Monitor for symptoms like chest pain, dizziness, or unusual fatigue.")
+            
+            return considerations
+
+        # Main function to handle calculation and display
+        async def calculate_and_display(event):
+            print("Starting calculate_and_display...")
+            weight_input = document['weight']
+            height_input = document['height']
+            unit_radios = document.select('input[name="units"]')
+            activity_level_select = document['activityLevel']
+            
+            results_overlay = document['resultsOverlay']
+            results_content = document['resultsContent']
+
+            bmi_value_span = document['bmiValue']
+            bmi_category_span = document['bmiCategory']
+            workout_suggestion_p = document['workoutSuggestion']
+            workout_videos_div = document['workoutVideos']
+            health_considerations_div = document['healthConsiderations']
+            weight_error = document['weightError']
+            height_error = document['heightError']
+
+            # Reset error messages
+            weight_error.classList.add('hidden')
+            height_error.classList.add('hidden')
+            is_valid = True
+
+            try:
+                weight = float(weight_input.value)
+                if weight <= 0:
+                    raise ValueError("Weight must be positive.")
+            except ValueError:
+                weight_error.text = "Please enter a valid positive weight."
+                weight_error.classList.remove('hidden')
+                is_valid = False
+
+            try:
+                height = float(height_input.value)
+                if height <= 0:
+                    raise ValueError("Height must be positive.")
+            except ValueError:
+                height_error.text = "Please enter a valid positive height."
+                height_error.classList.remove('hidden')
+                is_valid = False
+
+            if not is_valid:
+                print("Input validation failed.")
+                results_overlay.classList.remove('visible')
+                return
+
+            selected_units_list = [radio.value for radio in unit_radios if radio.checked]
+            selected_units = selected_units_list[0] if selected_units_list else 'metric'
+            
+            activity_level = activity_level_select.value
+
+            print(f"Inputs: Weight={weight}, Height={height}, Units={selected_units}, Activity={activity_level}")
+
+            # Get health conditions
+            health_conditions = []
+            if document['pacemaker'].checked:
+                health_conditions.append('pacemaker')
+            if document['diabetes'].checked:
+                health_conditions.append('diabetes')
+            if document['respiratoryIssues'].checked:
+                health_conditions.append('respiratoryIssues')
+            if document['jointProblems'].checked:
+                health_conditions.append('jointProblems')
+            if document['pregnant'].checked:
+                health_conditions.append('pregnant')
+            if document['heartCondition'].checked:
+                health_conditions.append('heartCondition')
+            
+            print(f"Selected health conditions: {health_conditions}")
+
+            # Call Python logic functions (Note: get_health_considerations_py is now synchronous)
+            bmi = calculate_bmi_py(weight, height, selected_units)
+            category = get_bmi_category_py(bmi)
+            
+            workout_suggestion_text, workout_videos = get_workout_suggestion_py(category, activity_level)
+            # Call synchronous version
+            health_considerations = get_health_considerations_py(health_conditions) 
+            
+            print("Finished calculating/generating suggestions.")
+
+            # Display results
+            bmi_value_span.text = f"{bmi:.2f}"
+            bmi_category_span.text = category
+            workout_suggestion_p.text = workout_suggestion_text
+
+            # Clear and display workout videos
+            workout_videos_div.html = ''
+            if workout_videos:
+                for video in workout_videos:
+                    video_wrapper = html.DIV(Class="video-container")
+                    iframe = html.IFRAME(
+                        src=video['url'],
+                        title=video['title'],
+                        frameborder="0",
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+                        allowfullscreen=True
+                    )
+                    video_wrapper <= iframe
+                    workout_videos_div <= video_wrapper
+            else:
+                workout_videos_div.html = '<p class="text-gray-600">No specific videos suggested for this category.</p>'
+
+
+            # Clear and display health considerations
+            health_considerations_div.html = ''
+            if len(health_considerations) > 0:
+                ul = html.UL()
+                ul <= html.H3("Important Health-Based Considerations:")
+                for consideration in health_considerations:
+                    li = html.LI(consideration)
+                    ul <= li
+                health_considerations_div <= ul
+            else:
+                health_considerations_div.html = '<p>No specific health considerations noted based on your selections. Always consult a healthcare provider.</p>'
+
+            # Show the results overlay
+            results_overlay.classList.add('visible')
+            print("Results overlay displayed.")
+
+        # Attach event listener to the button
+        document['calculateBtn'].bind('click', calculate_and_display)
+
+        # Event listener for closing the results overlay
+        document['closeResultsBtn'].bind('click', lambda event: document['resultsOverlay'].classList.remove('visible'))
+
+        # The 'Other' checkbox toggle function and its binding are now entirely removed.
+
+        # Event listeners for input changes to hide errors and update placeholders
+        def hide_error(event):
+            if event.target.nextElementSibling and hasattr(event.target.nextElementSibling, 'classList'):
+                event.target.nextElementSibling.classList.add('hidden')
+
+        document['weight'].bind('input', hide_error)
+        document['height'].bind('input', hide_error)
+
+        def update_placeholders(event=None):
+            current_unit_radios = document.select('input[name="units"]')
+            selected_units_list = [radio.value for radio in current_unit_radios if radio.checked]
+            selected_units = selected_units_list[0] if selected_units_list else 'metric'
+
+            if selected_units == 'metric':
+                document['weight'].attrs['placeholder'] = 'e.g., 70'
+                document['height'].attrs['placeholder'] = 'e.g., 1.75'
+            else:
+                document['weight'].attrs['placeholder'] = 'e.g., 150'
+                document['height'].attrs['placeholder'] = 'e.g., 68'
+
+        all_unit_radios_for_binding = document.select('input[name="units"]')
+        for radio in all_unit_radios_for_binding:
+             radio.bind('change', update_placeholders)
+
+        update_placeholders() # Call once on load to set initial placeholders
+    </script>
+</body>
+</html>
