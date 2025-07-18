@@ -33,7 +33,6 @@ const Card = ({ card, onClick, flippedCardsIds, matchedCardsIds }) => {
       {/* Card Back (Question Mark) */}
       <div className={`absolute w-full h-full flex items-center justify-center text-5xl md:text-6xl font-extrabold
         ${isFlipped ? 'opacity-0 rotate-y-180' : 'opacity-100'}`}
-        style={{ transform: 'rotateY(180deg)' }}
       >
         ?
       </div>
